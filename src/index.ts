@@ -8,6 +8,8 @@ export * from './types';
 export * from './utils/math';
 export * from './core/CascadeOrchestrator';
 export * from './core/CPUReferenceCascades';
+export * from './core/ThreeRadianceAdapter';
+
 
 export { sdfSceneShader } from './shaders/sdfScene.wgsl';
 export { cascadeRaymarchShader } from './shaders/cascadeRaymarch.wgsl';
