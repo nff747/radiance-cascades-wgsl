@@ -1,5 +1,7 @@
 ![Radiance Cascades WGSL](assets/banner.jpg)
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-WebGPU%20Interactive-ff0055?style=for-the-badge&logo=webgpu)](https://nff747.github.io/radiance-cascades-wgsl/)
+
 # Radiance Cascades WGSL 🌌⚡
 
 > **Real-Time 2D/3D Radiance Cascades Global Illumination & Infinite-Bounce Light Transport Engine in WebGPU / WGSL.**
