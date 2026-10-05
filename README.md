@@ -10,7 +10,7 @@
 [![WGSL](https://img.shields.io/badge/Shading-WGSL-ff007f?style=for-the-badge)](https://www.w3.org/TR/WGSL/)
 [![Algorithm: Sannikov](https://img.shields.io/badge/Algorithm-Radiance_Cascades-00ff88?style=for-the-badge)](https://github.com/nff747/radiance-cascades-wgsl)
 [![ACES Filmic](https://img.shields.io/badge/Color-ACES_Filmic_HDR-f59e0b?style=for-the-badge)](https://acescentral.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-Apache_2.0-blue?style=for-the-badge)](LICENSE)
 
 ---
 
@@ -147,4 +147,4 @@ radiance-cascades-wgsl/
 
 ## 📜 License
 
-MIT License © 2026 nff747. Open-sourced under the MIT License.
+Apache License 2.0 © 2026 nff747. Open-sourced under the Apache License, Version 2.0.
