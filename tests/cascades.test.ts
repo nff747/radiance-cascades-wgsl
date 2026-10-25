@@ -115,7 +115,48 @@ describe('CPUReferenceCascades Hierarchical Light Transport', () => {
     // Ray directly towards +X is blocked by occluder
     expect(shadowedRad[0]).toBe(0.0);
   });
+
+  it('should evaluate directional radiance with cosine weighting towards normal vector', () => {
+    const levels = CascadeMath.generateCascadeLevels(3, 0.05, 4.0);
+
+    const angle0 = Math.PI / 4.0;
+    const lightDist = 0.4;
+    const lightX = 0.2 + lightDist * Math.cos(angle0);
+    const lightY = 0.0 + lightDist * Math.sin(angle0);
+
+    const sampleSceneFn = (x: number, y: number) => {
+      const dx = x - lightX;
+      const dy = y - lightY;
+      const dist = Math.hypot(dx, dy) - 0.25;
+      return {
+        dist,
+        radiance: [2.0, 1.0, 0.5] as [number, number, number],
+        isEmissive: true,
+      };
+    };
+
+    // Normal pointing towards light (+X, +Y) from probe at [0.2, 0.0]
+    const facingLight = CPUReferenceCascades.solveDirectionalRadiance(
+      sampleSceneFn,
+      [0.2, 0.0],
+      [Math.cos(angle0), Math.sin(angle0)],
+      levels
+    );
+    expect(facingLight[0]).toBeGreaterThan(0.0);
+
+    // Normal pointing away from light (-X, -Y) from probe at [0.2, 0.0]
+    const facingAway = CPUReferenceCascades.solveDirectionalRadiance(
+      sampleSceneFn,
+      [0.2, 0.0],
+      [-Math.cos(angle0), -Math.sin(angle0)],
+      levels
+    );
+    expect(facingAway[0]).toBe(0.0);
+  });
 });
+
+
+
 
 describe('CascadeOrchestrator & WGSL Shaders Integrity', () => {
   it('should initialize orchestrator cascade levels', () => {
