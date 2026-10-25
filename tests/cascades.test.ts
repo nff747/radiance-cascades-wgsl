@@ -3,11 +3,13 @@ import {
   CascadeMath,
   CPUReferenceCascades,
   CascadeOrchestrator,
+  ThreeRadianceAdapter,
   sdfSceneShader,
   cascadeRaymarchShader,
   cascadeMergeShader,
   cascadeRenderShader,
 } from '../src/index';
+
 
 describe('CascadeMath Interval & Branching Formulations', () => {
   it('should generate contiguous geometric cascade levels with 4x branching', () => {
@@ -205,4 +207,41 @@ describe('CascadeOrchestrator & WGSL Shaders Integrity', () => {
     expect(cascadeRenderShader).toContain('fn main');
     expect(cascadeRenderShader).toContain('acesFilm');
   });
+
+  it('should generate valid Three.js shader pass definition and pack light buffers', () => {
+    const orchestrator = new CascadeOrchestrator({ numCascades: 3 });
+    const passDef = ThreeRadianceAdapter.createShaderPassDefinition(orchestrator);
+
+    expect(passDef.uniforms.tDiffuse.value).toBeNull();
+    expect(passDef.uniforms.exposure.value).toBeCloseTo(1.4);
+    expect(passDef.uniforms.resolution.value).toEqual([orchestrator.width, orchestrator.height]);
+    expect(passDef.vertexShader).toContain('varying vec2 vUv;');
+    expect(passDef.fragmentShader).toContain('acesFilm');
+
+    // Uniform updater
+    ThreeRadianceAdapter.updateUniforms(passDef.uniforms, 2.5, 1920, 1080);
+    expect(passDef.uniforms.exposure.value).toBeCloseTo(2.5);
+    expect(passDef.uniforms.resolution.value).toEqual([1920, 1080]);
+
+    // Light buffer packing
+    const lights = [
+      {
+        position: [0.5, -0.2] as [number, number],
+        radius: 0.15,
+        intensity: 5.0,
+        color: [1.0, 0.8, 0.6] as [number, number, number],
+      },
+    ];
+    const packed = ThreeRadianceAdapter.packLightBuffer(lights);
+    expect(packed.length).toBe(8); // 8 floats per light
+    expect(packed[0]).toBeCloseTo(0.5);
+    expect(packed[1]).toBeCloseTo(-0.2);
+    expect(packed[2]).toBeCloseTo(0.15);
+    expect(packed[3]).toBeCloseTo(5.0);
+    expect(packed[4]).toBeCloseTo(1.0);
+    expect(packed[5]).toBeCloseTo(0.8);
+    expect(packed[6]).toBeCloseTo(0.6);
+    expect(packed[7]).toBe(0.0); // 16-byte alignment
+  });
 });
+
