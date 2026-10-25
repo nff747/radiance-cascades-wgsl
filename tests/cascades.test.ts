@@ -59,7 +59,37 @@ describe('CascadeMath Interval & Branching Formulations', () => {
     expect(CascadeMath.isWithinInterval(0.09, 0.02, 0.08)).toBe(false);
     expect(CascadeMath.isWithinInterval(0.02, 0.02, 0.08)).toBe(true);
   });
+
+  it('should compute exact bilinear interpolation weights summing strictly to 1.0', () => {
+    // Exact center (0.5, 0.5) -> all four weights = 0.25
+    const centerWeights = CascadeMath.computeBilinearWeights(0.5, 0.5);
+    expect(centerWeights[0]).toBeCloseTo(0.25);
+    expect(centerWeights[1]).toBeCloseTo(0.25);
+    expect(centerWeights[2]).toBeCloseTo(0.25);
+    expect(centerWeights[3]).toBeCloseTo(0.25);
+
+    // Sum invariant
+    const sum = centerWeights.reduce((a, b) => a + b, 0);
+    expect(sum).toBeCloseTo(1.0, 6);
+
+    // Interpolate radiance vector: corner (1.0, 0.0) selects c10
+    const c00: [number, number, number] = [1, 0, 0];
+    const c10: [number, number, number] = [0, 1, 0];
+    const c01: [number, number, number] = [0, 0, 1];
+    const c11: [number, number, number] = [1, 1, 1];
+    const interp10 = CascadeMath.interpolateRadiance(c00, c10, c01, c11, 1.0, 0.0);
+    expect(interp10[0]).toBeCloseTo(0.0);
+    expect(interp10[1]).toBeCloseTo(1.0);
+    expect(interp10[2]).toBeCloseTo(0.0);
+
+    // Center interpolation
+    const interpMid = CascadeMath.interpolateRadiance(c00, c10, c01, c11, 0.5, 0.5);
+    expect(interpMid[0]).toBeCloseTo(0.5);
+    expect(interpMid[1]).toBeCloseTo(0.5);
+    expect(interpMid[2]).toBeCloseTo(0.5);
+  });
 });
+
 
 
 describe('CPUReferenceCascades Hierarchical Light Transport', () => {
