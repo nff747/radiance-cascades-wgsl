@@ -47,4 +47,45 @@ export class ThreeRadianceAdapter {
       `,
     };
   }
+
+  /**
+   * Updates resolution and exposure parameters on an existing shader material uniform map.
+   */
+  public static updateUniforms(
+    uniforms: { exposure?: { value: number }; resolution?: { value: [number, number] } },
+    exposure: number,
+    width: number,
+    height: number
+  ): void {
+    if (uniforms.exposure) {
+      uniforms.exposure.value = Math.max(0.01, exposure);
+    }
+    if (uniforms.resolution) {
+      uniforms.resolution.value = [Math.max(1, width), Math.max(1, height)];
+    }
+  }
+
+  /**
+   * Formats 2D point light sources into compact Float32Array uniform buffer payload.
+   * Format per light: [posX, posY, radius, intensity, colorR, colorG, colorB, 0.0] (32 bytes per light).
+   */
+  public static packLightBuffer(
+    lights: { position: [number, number]; radius: number; intensity: number; color: [number, number, number] }[]
+  ): Float32Array {
+    const buffer = new Float32Array(lights.length * 8);
+    for (let i = 0; i < lights.length; i++) {
+      const l = lights[i];
+      const offset = i * 8;
+      buffer[offset + 0] = l.position[0];
+      buffer[offset + 1] = l.position[1];
+      buffer[offset + 2] = l.radius;
+      buffer[offset + 3] = l.intensity;
+      buffer[offset + 4] = l.color[0];
+      buffer[offset + 5] = l.color[1];
+      buffer[offset + 6] = l.color[2];
+      buffer[offset + 7] = 0.0; // 16-byte alignment padding
+    }
+    return buffer;
+  }
 }
+
