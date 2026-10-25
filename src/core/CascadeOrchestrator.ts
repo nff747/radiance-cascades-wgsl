@@ -110,4 +110,49 @@ export class CascadeOrchestrator {
   public getOutputTexture(): GPUTexture | null {
     return this.outputTexture;
   }
+
+  /**
+   * Calculates total VRAM footprint in bytes required by all cascade storage textures and screen buffer.
+   * Cascade textures use rgba16float (8 bytes/pixel), screen uses rgba8unorm (4 bytes/pixel).
+   */
+  public calculateTotalVRAMBytes(): number {
+    let totalBytes = 0;
+    // rgba16float = 4 channels * 2 bytes = 8 bytes per texel
+    for (const lvl of this.levels) {
+      const texWidth = this.width * lvl.rayCount;
+      totalBytes += texWidth * this.height * 8;
+    }
+    // rgba8unorm output = 4 bytes per texel
+    totalBytes += this.width * this.height * 4;
+    return totalBytes;
+  }
+
+  /**
+   * Resizes viewport resolution and reallocates textures.
+   */
+  public resize(width: number, height: number): void {
+    if (width <= 0 || height <= 0) {
+      throw new RangeError(`Resolution dimensions must be positive non-zero integers, received [${width}, ${height}]`);
+    }
+    this.width = Math.floor(width);
+    this.height = Math.floor(height);
+    if (this.device) {
+      this.allocateTextures();
+    }
+  }
+
+  /**
+   * Explicitly disposes of all GPU allocated textures.
+   */
+  public destroy(): void {
+    for (const tex of this.cascadeTextures) {
+      try { tex.destroy(); } catch { /* noop */ }
+    }
+    this.cascadeTextures = [];
+    if (this.outputTexture) {
+      try { this.outputTexture.destroy(); } catch { /* noop */ }
+      this.outputTexture = null;
+    }
+  }
 }
+
