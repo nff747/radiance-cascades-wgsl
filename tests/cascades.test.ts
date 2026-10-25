@@ -167,7 +167,29 @@ describe('CascadeOrchestrator & WGSL Shaders Integrity', () => {
     expect(lvls[3].rayCount).toBe(256);
   });
 
+  it('should calculate accurate VRAM texture memory footprint and handle resize', () => {
+    const orchestrator = new CascadeOrchestrator({ numCascades: 3 });
+    // Resolution: 800 x 600
+    // L0: 800 * 4 * 600 * 8 = 15,360,000 bytes
+    // L1: 800 * 16 * 600 * 8 = 61,440,000 bytes
+    // L2: 800 * 64 * 600 * 8 = 245,760,000 bytes
+    // Output: 800 * 600 * 4 = 1,920,000 bytes
+    // Total = 324,480,000 bytes (~309.4 MB)
+    const vramBytes = orchestrator.calculateTotalVRAMBytes();
+    expect(vramBytes).toBe(324480000);
+
+    // Dynamic resize
+    orchestrator.resize(1024, 768);
+    expect(orchestrator.width).toBe(1024);
+    expect(orchestrator.height).toBe(768);
+
+    // Negative / zero dimensions should throw RangeError
+    expect(() => orchestrator.resize(-100, 600)).toThrow(RangeError);
+    expect(() => orchestrator.resize(800, 0)).toThrow(RangeError);
+  });
+
   it('should contain valid WGSL compute entrypoints and shader symbols', () => {
+
     expect(sdfSceneShader).toContain('sampleScene');
     expect(sdfSceneShader).toContain('sdCircle');
 
