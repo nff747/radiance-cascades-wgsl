@@ -105,4 +105,96 @@ export class CPUReferenceCascades {
 
     return [totalR / cascade0.length, totalG / cascade0.length, totalB / cascade0.length];
   }
+
+  /**
+   * Evaluates directional radiance towards a specified surface normal or view direction vector.
+   * Cosine-weights each Cascade 0 ray dot product against the query normal.
+   */
+  public static solveDirectionalRadiance(
+    sampleSceneFn: (x: number, y: number) => { dist: number; radiance: [number, number, number]; isEmissive: boolean },
+    probePos: [number, number],
+    normal: [number, number],
+    levels: CascadeLevelConfig[]
+  ): [number, number, number] {
+    const normLen = Math.hypot(normal[0], normal[1]) || 1.0;
+    const nx = normal[0] / normLen;
+    const ny = normal[1] / normLen;
+
+    const cascadesData: { rad: [number, number, number]; transmittance: number }[][] = [];
+
+    // Raymarch intervals
+    for (let c = 0; c < levels.length; c++) {
+      const lvl = levels[c];
+      const rayResults: { rad: [number, number, number]; transmittance: number }[] = [];
+
+      for (let k = 0; k < lvl.rayCount; k++) {
+        const [dirX, dirY] = CascadeMath.getRayDirection(k, lvl.rayCount);
+        let t = lvl.intervalMin;
+        const maxT = lvl.intervalMax;
+        let accRad: [number, number, number] = [0, 0, 0];
+        let trans = 1.0;
+
+        while (t < maxT) {
+          const px = probePos[0] + dirX * t;
+          const py = probePos[1] + dirY * t;
+          const query = sampleSceneFn(px, py);
+
+          if (query.dist < 0.002) {
+            if (query.isEmissive) {
+              accRad = [query.radiance[0], query.radiance[1], query.radiance[2]];
+            }
+            trans = 0.0;
+            break;
+          }
+          t += Math.max(query.dist, 0.002);
+        }
+        rayResults.push({ rad: accRad, transmittance: trans });
+      }
+      cascadesData.push(rayResults);
+    }
+
+    // Merge outer to inner
+    for (let c = levels.length - 2; c >= 0; c--) {
+      const currentLevel = cascadesData[c];
+      const upperLevel = cascadesData[c + 1];
+      const branching = levels[c + 1].rayCount / levels[c].rayCount;
+
+      for (let k = 0; k < levels[c].rayCount; k++) {
+        const local = currentLevel[k];
+        if (local.transmittance <= 0.001) continue;
+
+        let upperAvgR = 0, upperAvgG = 0, upperAvgB = 0;
+        const baseUpperIdx = k * branching;
+        for (let b = 0; b < branching; b++) {
+          const upperRay = upperLevel[baseUpperIdx + b];
+          upperAvgR += upperRay.rad[0];
+          upperAvgG += upperRay.rad[1];
+          upperAvgB += upperRay.rad[2];
+        }
+
+        local.rad[0] += local.transmittance * (upperAvgR / branching);
+        local.rad[1] += local.transmittance * (upperAvgG / branching);
+        local.rad[2] += local.transmittance * (upperAvgB / branching);
+      }
+    }
+
+    // Cosine-weighted directional accumulation
+    const cascade0 = cascadesData[0];
+    let totalR = 0, totalG = 0, totalB = 0, totalWeight = 0;
+
+    for (let k = 0; k < cascade0.length; k++) {
+      const [dirX, dirY] = CascadeMath.getRayDirection(k, cascade0.length);
+      const cosTheta = Math.max(0.0, dirX * nx + dirY * ny);
+      if (cosTheta > 0.0) {
+        totalR += cascade0[k].rad[0] * cosTheta;
+        totalG += cascade0[k].rad[1] * cosTheta;
+        totalB += cascade0[k].rad[2] * cosTheta;
+        totalWeight += cosTheta;
+      }
+    }
+
+    if (totalWeight <= 1e-6) return [0, 0, 0];
+    return [totalR / totalWeight, totalG / totalWeight, totalB / totalWeight];
+  }
 }
+
