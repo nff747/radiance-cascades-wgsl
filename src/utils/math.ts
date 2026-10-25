@@ -82,5 +82,39 @@ export class CascadeMath {
   public static isWithinInterval(distance: number, intervalMin: number, intervalMax: number, epsilon: number = 1e-5): boolean {
     return distance >= intervalMin - epsilon && distance <= intervalMax + epsilon;
   }
+
+  /**
+   * Computes 2D bilinear interpolation weights [w00, w10, w01, w11] for normalized UV coordinate (u, v) in [0, 1].
+   * Sum of all four weights strictly equals 1.0.
+   */
+  public static computeBilinearWeights(u: number, v: number): [number, number, number, number] {
+    const s = Math.max(0.0, Math.min(1.0, u));
+    const t = Math.max(0.0, Math.min(1.0, v));
+    const w00 = (1.0 - s) * (1.0 - t);
+    const w10 = s * (1.0 - t);
+    const w01 = (1.0 - s) * t;
+    const w11 = s * t;
+    return [w00, w10, w01, w11];
+  }
+
+  /**
+   * Bilinearly interpolates 4 radiance vectors [c00, c10, c01, c11] using coordinates (u, v).
+   */
+  public static interpolateRadiance(
+    c00: [number, number, number],
+    c10: [number, number, number],
+    c01: [number, number, number],
+    c11: [number, number, number],
+    u: number,
+    v: number
+  ): [number, number, number] {
+    const [w00, w10, w01, w11] = CascadeMath.computeBilinearWeights(u, v);
+    return [
+      c00[0] * w00 + c10[0] * w10 + c01[0] * w01 + c11[0] * w11,
+      c00[1] * w00 + c10[1] * w10 + c01[1] * w01 + c11[1] * w11,
+      c00[2] * w00 + c10[2] * w10 + c01[2] * w01 + c11[2] * w11,
+    ];
+  }
 }
+
 
