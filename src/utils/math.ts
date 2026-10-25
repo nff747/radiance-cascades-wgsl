@@ -57,4 +57,30 @@ export class CascadeMath {
   public static toSRGB(linear: number): number {
     return Math.pow(Math.max(0.0, linear), 1.0 / 2.2);
   }
+
+  /**
+   * Computes ray direction angle in radians for ray index r among rayCount rays.
+   * Uses equidistant angular discretization theta_r = (r + 0.5) * (2 * PI / rayCount).
+   */
+  public static getRayAngle(rayIndex: number, rayCount: number): number {
+    if (rayCount <= 0) return 0.0;
+    const clampedIndex = Math.max(0, Math.min(rayIndex, rayCount - 1));
+    return (clampedIndex + 0.5) * ((2.0 * Math.PI) / rayCount);
+  }
+
+  /**
+   * Returns 2D normalized unit direction vector [cos(theta), sin(theta)] for a given ray.
+   */
+  public static getRayDirection(rayIndex: number, rayCount: number): [number, number] {
+    const angle = CascadeMath.getRayAngle(rayIndex, rayCount);
+    return [Math.cos(angle), Math.sin(angle)];
+  }
+
+  /**
+   * Validates whether a spatial distance sample falls strictly within a cascade interval [min, max].
+   */
+  public static isWithinInterval(distance: number, intervalMin: number, intervalMax: number, epsilon: number = 1e-5): boolean {
+    return distance >= intervalMin - epsilon && distance <= intervalMax + epsilon;
+  }
 }
+
