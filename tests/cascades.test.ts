@@ -40,7 +40,25 @@ describe('CascadeMath Interval & Branching Formulations', () => {
     expect(low).toBeLessThan(mid);
     expect(mid).toBeLessThan(high);
   });
+
+  it('should compute accurate ray directions and interval containment', () => {
+    // 4 rays equidistant: 45, 135, 225, 315 degrees
+    const dir0 = CascadeMath.getRayDirection(0, 4);
+    expect(dir0[0]).toBeCloseTo(Math.cos(Math.PI / 4), 5);
+    expect(dir0[1]).toBeCloseTo(Math.sin(Math.PI / 4), 5);
+
+    // Vector length should be unit length 1.0
+    const len = Math.hypot(dir0[0], dir0[1]);
+    expect(len).toBeCloseTo(1.0, 5);
+
+    // Interval checks
+    expect(CascadeMath.isWithinInterval(0.05, 0.02, 0.08)).toBe(true);
+    expect(CascadeMath.isWithinInterval(0.01, 0.02, 0.08)).toBe(false);
+    expect(CascadeMath.isWithinInterval(0.09, 0.02, 0.08)).toBe(false);
+    expect(CascadeMath.isWithinInterval(0.02, 0.02, 0.08)).toBe(true);
+  });
 });
+
 
 describe('CPUReferenceCascades Hierarchical Light Transport', () => {
   it('should gather radiance from distant emissive source through cascades', () => {
