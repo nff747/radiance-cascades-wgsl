@@ -4,6 +4,8 @@
 
 # Radiance Cascades WGSL 🌌⚡
 
+[![Lunar Paradox](https://img.shields.io/badge/Organization-Lunar_Paradox-0a0e1a?style=for-the-badge&logo=probot&logoColor=d7b886)](https://lunarparadox.com)
+
 > **Real-Time 2D/3D Radiance Cascades Global Illumination & Infinite-Bounce Light Transport Engine in WebGPU / WGSL.**
 
 [![WebGPU](https://img.shields.io/badge/WebGPU-Compute_Shaders-00f0ff?style=for-the-badge&logo=webgpu)](https://www.w3.org/TR/webgpu/)
@@ -148,3 +150,7 @@ radiance-cascades-wgsl/
 ## 📜 License
 
 Apache License 2.0 © 2026 nff747. Open-sourced under the Apache License, Version 2.0.
+
+---
+
+*A component of the [Lunar Paradox](https://lunarparadox.com) applied systems & graphics laboratory. Engineered by nff747.*
